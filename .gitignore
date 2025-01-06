@@ -1,0 +1,4 @@
+venv/
+client/node_modules/
+client/build/
+PythonTask.pdf
