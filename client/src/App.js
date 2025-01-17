@@ -6,6 +6,7 @@ import Footer from "./components/Layout/Footer";
 import Login from "./components/Auth/LoginForm";
 import Register from "./components/Auth/RegisterForm";
 import { useAuth } from "./context/AuthContext";
+import ChatScreen from "./components/Profile/Chat";
 
 function App() {
   const {user} = useAuth();
@@ -18,6 +19,7 @@ function App() {
             <Route path="/" element={user == null ? <Navigate to="/login" replace={true} /> : <Navigate to="/dashboard" replace={true} />} />
             <Route path="/client" element={user == null ? <Navigate to="/login" replace={true} /> : <Navigate to="/dashboard" replace={true} />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/chat" element={<ChatScreen />} />
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/profile" element={<ProfilePage />} />

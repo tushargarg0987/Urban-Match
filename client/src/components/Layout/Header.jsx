@@ -14,6 +14,9 @@ export default function Header() {
       <div className="container mx-auto flex justify-between items-center">
         <h1 className="text-2xl font-bold">MatchMaker</h1>
         {user ? <nav>
+          <Link to="/chat" className="mx-2 hover:underline">
+            Chat
+          </Link>
           <Link to="/dashboard" className="mx-2 hover:underline">
             Dashboard
           </Link>

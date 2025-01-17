@@ -5,9 +5,10 @@ import api from "../../utils/api";
 
 const Register = () => {
   const { sendOtp, verifyOtp } = useAuth();
-  const [step, setStep] = useState(1); // Step 1: Email OTP, Step 2: Register
+  const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
+  const [questionnaire, setQuestionnaire] = useState({});
   const [formData, setFormData] = useState({
     name: "",
     age: "",
@@ -15,14 +16,17 @@ const Register = () => {
     city: "",
     interests: "",
   });
-  const {setUser} = useAuth();
+  const { setUser } = useAuth();
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false); // Loading state
   const navigate = useNavigate();
 
   const handleSendOtp = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true); // Set loading to true
     const result = await sendOtp(email);
+    setLoading(false); // Set loading to false once the API responds
     if (result.success) {
       setStep(2);
     } else {
@@ -33,7 +37,9 @@ const Register = () => {
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
     const result = await verifyOtp(email, otp, true);
+    setLoading(false);
     if (result.success) {
       setStep(3);
     } else {
@@ -44,20 +50,46 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true); // Start loading before the request
     try {
-      const res = await api.post("/users", { ...formData, 
-        email, 
+      const res = await api.post("/users", {
+        ...formData,
+        email,
         interests: Array.isArray(formData.interests)
-        ? formData.interests
-        : formData.interests.split(",").map((i) => i.trim()), });
-      
-      console.log("Register:", res);
-      setUser(res.data)
+          ? formData.interests
+          : formData.interests.split(",").map((i) => i.trim()),
+        questionnaire,
+      });
+      setUser(res.data);
       navigate("/dashboard");
     } catch (err) {
       setError(err.response?.data?.detail || "Registration failed");
+    } finally {
+      setLoading(false); // Set loading to false after the request
     }
   };
+
+  const handleQuestionnaireChange = (question, answer) => {
+    setQuestionnaire((prev) => ({ ...prev, [question]: answer }));
+  };
+
+  const questionnaireQuestions = [
+    "What are your hobbies?",
+    "Do you prefer indoor or outdoor activities?",
+    "Do you smoke?",
+    "Do you drink alcohol?",
+    "What kind of books do you like to read?",
+    "What is your favorite type of music?",
+    "Do you enjoy traveling? If yes, where do you want to go?",
+    "Are you a morning person or a night owl?",
+    "What kind of movies or shows do you enjoy?",
+    "What is your preferred way to relax?",
+    "Do you have any dietary preferences or restrictions?",
+    "How do you usually spend your weekends?",
+    "What kind of people do you like to talk to?",
+    "How do you usually introduce yourself to new people?",
+    "What’s one habit or routine you follow daily?",
+  ];
 
   return (
     <div className="flex items-center justify-center h-[100%] flex-1 bg-gray-50">
@@ -66,6 +98,7 @@ const Register = () => {
           {step === 1 && "Register: Step 1 - Verify Email"}
           {step === 2 && "Register: Step 2 - Enter OTP"}
           {step === 3 && "Register: Step 3 - Fill Details"}
+          {step === 4 && "Register: Step 4 - Personality Questionnaire"}
         </h1>
 
         {step === 1 && (
@@ -80,9 +113,14 @@ const Register = () => {
             />
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition flex justify-center items-center"
+              disabled={loading} // Disable button while loading
             >
-              Send OTP
+              {loading ? (
+                <div className="spinner-border animate-spin w-5 h-5 border-4 border-t-4 border-white rounded-full"></div>
+              ) : (
+                "Send OTP"
+              )}
             </button>
             <div className="text-center">
               <Link to="/login" className="text-blue-500 hover:underline">
@@ -104,15 +142,20 @@ const Register = () => {
             />
             <button
               type="submit"
-              className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition"
+              className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition flex justify-center items-center"
+              disabled={loading}
             >
-              Verify OTP
+              {loading ? (
+                <div className="spinner-border animate-spin w-5 h-5 border-4 border-t-4 border-white rounded-full"></div>
+              ) : (
+                "Verify OTP"
+              )}
             </button>
           </form>
         )}
 
         {step === 3 && (
-          <form onSubmit={handleRegister} className="space-y-4">
+          <form onSubmit={(e) => { e.preventDefault(); setStep(4); }} className="space-y-4">
             <input
               type="text"
               placeholder="Name"
@@ -162,8 +205,42 @@ const Register = () => {
             <button
               type="submit"
               className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition"
+              disabled={loading}
             >
-              Register
+              {loading ? (
+                <div className="spinner-border animate-spin w-5 h-5 border-4 border-t-4 border-white rounded-full"></div>
+              ) : (
+                "Continue to Questionnaire"
+              )}
+            </button>
+          </form>
+        )}
+
+        {step === 4 && (
+          <form onSubmit={handleRegister} className="space-y-4" style={{maxHeight: '70vh', overflowX: 'hidden', overflowY: 'scroll'}}>
+            {questionnaireQuestions.map((question, index) => (
+              <div key={index} className="space-y-2">
+                <label className="block text-gray-700">{question}</label>
+                <input
+                  type="text"
+                  className="w-full border rounded-lg p-2"
+                  onChange={(e) =>
+                    handleQuestionnaireChange(question, e.target.value)
+                  }
+                  required
+                />
+              </div>
+            ))}
+            <button
+              type="submit"
+              className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition flex justify-center items-center"
+              disabled={loading}
+            >
+              {loading ? (
+                <div className="spinner-border animate-spin w-5 h-5 border-4 border-t-4 border-white rounded-full"></div>
+              ) : (
+                "Submit and Register"
+              )}
             </button>
           </form>
         )}

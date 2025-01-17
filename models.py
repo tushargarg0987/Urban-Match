@@ -10,4 +10,5 @@ class User(Base):
     gender = Column(String)
     email = Column(String, unique=True, index=True)
     city = Column(String, index=True)
-    interests = Column(JSON)
+    interests = Column(JSON)  # List of interests
+    questionnaire = Column(JSON)  # Storing questionnaire answers as JSON

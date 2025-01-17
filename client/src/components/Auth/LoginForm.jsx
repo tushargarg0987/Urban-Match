@@ -8,12 +8,15 @@ const Login = () => {
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState(1); // Step 1: Send OTP, Step 2: Verify OTP
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false); // Loading state
   const navigate = useNavigate();
 
   const handleSendOtp = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true); // Start loading before the API call
     const result = await sendOtp(email);
+    setLoading(false); // Stop loading after the API call
     if (result.success) {
       setStep(2);
     } else {
@@ -24,7 +27,9 @@ const Login = () => {
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
     setError("");
+    setLoading(true);
     const result = await verifyOtp(email, otp, false);
+    setLoading(false);
     if (result.success) {
       navigate("/dashboard");
     } else {
@@ -51,9 +56,14 @@ const Login = () => {
             />
             <button
               type="submit"
-              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+              className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition flex justify-center items-center"
+              disabled={loading} // Disable button during loading
             >
-              Send OTP
+              {loading ? (
+                <div className="spinner-border animate-spin w-5 h-5 border-4 border-t-4 border-white rounded-full"></div>
+              ) : (
+                "Send OTP"
+              )}
             </button>
             <div className="text-center">
               <Link to="/register" className="text-blue-500 hover:underline">
@@ -75,9 +85,14 @@ const Login = () => {
             />
             <button
               type="submit"
-              className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition"
+              className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition flex justify-center items-center"
+              disabled={loading}
             >
-              Verify OTP
+              {loading ? (
+                <div className="spinner-border animate-spin w-5 h-5 border-4 border-t-4 border-white rounded-full"></div>
+              ) : (
+                "Verify OTP"
+              )}
             </button>
           </form>
         )}

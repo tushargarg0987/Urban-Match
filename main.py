@@ -6,15 +6,22 @@ from utils.match_score import calculate_match_score
 from utils.otp_service import OTPService
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
+from dotenv import load_dotenv
+load_dotenv()
+
+from utils.ai import generate_response
 
 app = FastAPI()
 
 app.mount("/client", StaticFiles(directory="public", html=True), name="public")
+app.mount("/login", StaticFiles(directory="public", html=True), name="public_login")
+app.mount("/register", StaticFiles(directory="public", html=True), name="public_reg")
+
 
 origins = [
-    "http://localhost:3000",  # Add the frontend URL here (for local development)
-    "http://127.0.0.1:3000", # Add if using localhost with port 3000
-    # You can add other allowed origins here (like production frontend URL)
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
 ]
 
 app.add_middleware(
@@ -34,8 +41,13 @@ def get_db():
     finally:
         db.close()
 
+@app.get("/")
+def redirect_to_login():
+    return RedirectResponse(url="/login")
+
 @app.post("/users/", response_model=schemas.User)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    print(user.dict())
     # Check if the email already exists
     existing_user = db.query(models.User).filter(models.User.email == user.email).first()
     if existing_user:
@@ -193,3 +205,12 @@ async def verify_otp(user_email: str, otp: str, reg: bool, db: Session = Depends
         raise HTTPException(status_code=400, detail=response["message"])
 
     return {existing_user}
+
+@app.get("/get-response")
+async def get_response(user_id: int,message: str, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    res = generate_response(user, message)
+    return res

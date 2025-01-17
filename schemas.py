@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Dict
 
 class UserBase(BaseModel):
     name: str
@@ -8,6 +8,7 @@ class UserBase(BaseModel):
     email: str
     city: str
     interests: List[str]
+    questionnaire: Dict[str, str] 
 
 class UserCreate(UserBase):
     pass
@@ -17,4 +18,3 @@ class User(UserBase):
 
     class Config:
         from_attributes = True
-
